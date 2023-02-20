@@ -64,12 +64,7 @@ class _FormState extends State<_Form> {
               placeholder: 'Password',
               isPassword: true,
               textController: passwordController),
-          Button(
-              onPress: () {
-                print(emailController.text);
-                print(passwordController.text);
-              },
-              text: 'Sign Up')
+          Button(onPress: () {}, text: 'Sign Up')
         ],
       ),
     );

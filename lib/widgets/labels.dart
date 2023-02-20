@@ -31,7 +31,7 @@ class Labels extends StatelessWidget {
           ),
         ),
         const Padding(
-          padding: EdgeInsets.only(top: 10),
+          padding: EdgeInsets.only(top: 50),
           child: Text(
             'terms and conditions',
             style: TextStyle(fontWeight: FontWeight.w200),

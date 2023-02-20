@@ -11,7 +11,7 @@ class LoginScreen extends StatelessWidget {
       body: SafeArea(
           child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        child: Container(
+        child: SizedBox(
           height: MediaQuery.of(context).size.height * 0.9,
           child: Center(
             child: Column(
@@ -58,12 +58,7 @@ class _FormState extends State<_Form> {
               placeholder: 'Password',
               isPassword: true,
               textController: passwordController),
-          Button(
-              onPress: () {
-                print(emailController.text);
-                print(passwordController.text);
-              },
-              text: 'Sign in')
+          Button(onPress: () {}, text: 'Sign in')
         ],
       ),
     );

@@ -15,7 +15,7 @@ class Button extends StatelessWidget {
           shape: MaterialStateProperty.all(
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(25))),
         ),
-        child: Container(
+        child: SizedBox(
           width: double.infinity,
           height: 55,
           child: Center(
