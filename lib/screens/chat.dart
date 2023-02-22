@@ -91,7 +91,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 child: !Platform.isIOS
                     ? CupertinoButton(
                         onPressed: isWriting
-                            ? _hanldeSubmit(textController.text)
+                            ? () => _hanldeSubmit(textController.text)
                             : null,
                         child: const Text('send'),
                       )
