@@ -1,5 +1,8 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'package:chat_app/services/auth_service.dart';
 import 'package:chat_app/widgets/widgets.dart';
+import 'package:chat_app/helpers/show_alert.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -43,6 +46,7 @@ class _FormState extends State<_Form> {
   final passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -58,7 +62,24 @@ class _FormState extends State<_Form> {
               placeholder: 'Password',
               isPassword: true,
               textController: passwordController),
-          Button(onPress: () {}, text: 'Sign in')
+          Button(
+              onPress: authService.isAuthenticating
+                  ? null
+                  : () async {
+                      FocusNode().unfocus();
+
+                      final isSuccess = await Provider.of<AuthService>(context,
+                              listen: false)
+                          .login(emailController.text, passwordController.text);
+
+                      if (isSuccess == true) {
+                        Navigator.pushReplacementNamed(context, 'users');
+                      } else {
+                        showAlert(context, isSuccess.toString(),
+                            isSuccess.toString());
+                      }
+                    },
+              text: 'Sign in')
         ],
       ),
     );
