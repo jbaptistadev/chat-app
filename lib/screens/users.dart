@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:chat_app/models/models.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:chat_app/services/services.dart';
+import 'package:chat_app/models/models.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({Key? key}) : super(key: key);
@@ -12,43 +14,40 @@ class UsersScreen extends StatefulWidget {
 class _UsersScreenState extends State<UsersScreen> {
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-  final users = [
-    User(
-        online: true,
-        email: 'jbaptista.dev@gmail.com',
-        name: 'jose',
-        uiID: 'oaisoaisoais'),
-    User(
-        online: true,
-        email: 'maria@gmail.com',
-        name: 'maria',
-        uiID: '2342323xxc'),
-    User(
-        online: false,
-        email: 'baprivas.dev@gmail.com',
-        name: 'antonio',
-        uiID: '232323232'),
-  ];
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
+    final user = authService.user;
+
+    socketService.friendsList.removeWhere(
+      (element) => element.id == user.id,
+    );
+
     return Scaffold(
       appBar: AppBar(
         elevation: 1,
         backgroundColor: Colors.white,
         leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, 'login');
+              Provider.of<AuthService>(context, listen: false).logOut();
+              Provider.of<SocketService>(context, listen: false).disconnect();
+            },
             icon: const Icon(Icons.exit_to_app, color: Colors.black87)),
-        title: const Text(
-          'My name',
-          style: TextStyle(color: Colors.black87),
+        title: Text(
+          user.fullName,
+          style: const TextStyle(color: Colors.black87),
         ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 10),
             child: Icon(
               Icons.offline_bolt,
-              color: Colors.blue[400],
+              color: socketService.serverStatus == ServerStatus.online
+                  ? Colors.blue[400]
+                  : Colors.redAccent[400],
             ),
           )
         ],
@@ -64,58 +63,101 @@ class _UsersScreenState extends State<UsersScreen> {
           ),
           waterDropColor: Colors.blue,
         ),
-        child: _ListViewUsers(users: users),
+        child: socketService.onlineUsers.isEmpty
+            ? _EmptyList()
+            : _ListViewUsers(
+                friends: socketService.friendsList,
+                usersOnline: socketService.onlineUsers),
       ),
     );
   }
 
   _loadUsers() async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Provider.of<SocketService>(context, listen: false).getFriends();
 
     _refreshController.refreshCompleted();
   }
 }
 
+class _EmptyList extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xffefffff),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(
+            Icons.message,
+            size: 160,
+            color: Color(0xff34a5d2),
+          ),
+          Text(
+            'No users connected',
+            style: TextStyle(
+                fontSize: 20,
+                color: Colors.black45,
+                fontWeight: FontWeight.w500),
+          )
+        ],
+      ),
+    );
+  }
+}
+
 class _ListViewUsers extends StatelessWidget {
   const _ListViewUsers({
-    required this.users,
+    required this.friends,
+    required this.usersOnline,
   });
 
-  final List<User> users;
+  final List<Friend> friends;
+  final List<Friend> usersOnline;
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
         physics: const BouncingScrollPhysics(),
         itemBuilder: (_, index) {
-          return _Item(user: users[index]);
+          final friend = friends[index];
+          return _Item(
+            user: friend,
+            online: usersOnline.any((element) => element.id == friend.id),
+          );
         },
         separatorBuilder: (_, index) => const Divider(),
-        itemCount: users.length);
+        itemCount: friends.length);
   }
 }
 
 class _Item extends StatelessWidget {
-  const _Item({
-    required this.user,
-  });
+  const _Item({required this.user, required this.online});
 
-  final User user;
+  final Friend user;
+  final bool online;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(user.name),
-      leading: CircleAvatar(
-        backgroundColor: Colors.blue[100],
-        child: Text(user.name.substring(0, 2)),
-      ),
-      trailing: Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(100),
-            color: user.online ? Colors.green[300] : Colors.red[600]),
+    return GestureDetector(
+      onTap: () {
+        final chatService = Provider.of<ChatService>(context, listen: false);
+        chatService.userFrom = user;
+        chatService.userFrom.online = online;
+        Navigator.pushNamed(context, 'chat');
+      },
+      child: ListTile(
+        title: Text(user.fullName),
+        leading: CircleAvatar(
+          backgroundColor: Colors.blue[100],
+          child: Text(user.fullName.substring(0, 2)),
+        ),
+        trailing: Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              color: online ? Colors.green[300] : Colors.red[600]),
+        ),
       ),
     );
   }

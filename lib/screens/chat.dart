@@ -120,7 +120,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   _hanldeSubmit(String text) {
     if (text.isEmpty) return;
     isWriting = false;
-    print(text);
 
     final newMessage = BubbleChat(
       text: text,

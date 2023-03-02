@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:chat_app/services/services.dart';
 import 'package:chat_app/widgets/widgets.dart';
+import 'package:chat_app/helpers/show_alert.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -44,6 +47,8 @@ class _FormState extends State<_Form> {
   final passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context, listen: false);
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -64,7 +69,28 @@ class _FormState extends State<_Form> {
               placeholder: 'Password',
               isPassword: true,
               textController: passwordController),
-          Button(onPress: () {}, text: 'Sign Up')
+          Button(
+              onPress: authService.isAuthenticating
+                  ? null
+                  : () async {
+                      FocusNode().unfocus();
+
+                      final isSuccess =
+                          await Provider.of<AuthService>(context, listen: false)
+                              .register(
+                                  nameController.text,
+                                  emailController.text,
+                                  passwordController.text);
+
+                      if (isSuccess == true) {
+                        socketService.connect();
+                        Navigator.pushReplacementNamed(context, 'users');
+                      } else {
+                        showAlert(context, isSuccess.toString(),
+                            isSuccess.toString());
+                      }
+                    },
+              text: 'Sign Up')
         ],
       ),
     );

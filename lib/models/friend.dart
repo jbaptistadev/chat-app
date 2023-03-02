@@ -1,38 +1,34 @@
 // To parse this JSON data, do
 //
-//     final User = UserFromMap(jsonString);
+//     final friend = friendFromMap(jsonString);
 
 import 'dart:convert';
 
-class User {
-  User(
+class Friend {
+  Friend(
       {required this.id,
       required this.fullName,
       required this.email,
-      required this.token,
       this.online = false});
 
   String id;
   String fullName;
   String email;
-  String token;
-  bool online;
+  bool? online;
 
-  factory User.fromJson(String str) => User.fromMap(json.decode(str));
+  factory Friend.fromJson(String str) => Friend.fromMap(json.decode(str));
 
   String toJson() => json.encode(toMap());
 
-  factory User.fromMap(Map<String, dynamic> json) => User(
+  factory Friend.fromMap(Map<String, dynamic> json) => Friend(
         id: json["_id"],
         fullName: json["fullName"],
         email: json["email"],
-        token: json["token"],
       );
 
   Map<String, dynamic> toMap() => {
         "_id": id,
         "fullName": fullName,
         "email": email,
-        "token": token,
       };
 }
