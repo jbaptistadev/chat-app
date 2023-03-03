@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:chat_app/models/models.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:chat_app/widgets/widgets.dart';
+import 'package:chat_app/services/services.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
@@ -14,10 +17,55 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final textController = TextEditingController();
   final focusNode = FocusNode();
+  late ChatService chatService;
+  late SocketService socketService;
+  late AuthService authService;
 
   final List<BubbleChat> _messsages = [];
 
   bool isWriting = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    chatService = Provider.of<ChatService>(context, listen: false);
+    socketService = Provider.of<SocketService>(context, listen: false);
+    authService = Provider.of<AuthService>(context, listen: false);
+
+    socketService.socket.on('private-message', _listenMessage);
+
+    _loadMessageHistory(chatService.userFrom.id);
+  }
+
+  void _loadMessageHistory(String userID) async {
+    List<Message> chat = await chatService.getChat(userID);
+
+    final history = chat.map((item) => BubbleChat(
+        text: item.message,
+        uid: item.of,
+        animationController: AnimationController(
+            vsync: this, duration: const Duration(milliseconds: 0))
+          ..forward()));
+
+    setState(() {
+      _messsages.insertAll(0, history);
+    });
+  }
+
+  void _listenMessage(dynamic payload) {
+    final BubbleChat newMessage = BubbleChat(
+        text: payload['message'],
+        uid: payload['of'],
+        animationController: AnimationController(
+            vsync: this, duration: const Duration(milliseconds: 300)));
+    setState(() {
+      _messsages.insert(0, newMessage);
+    });
+
+    newMessage.animationController.forward();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,18 +73,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         elevation: 0,
         backgroundColor: const Color(0xff201533),
         title: Column(
-          children: const [
+          children: [
             CircleAvatar(
               maxRadius: 14,
-              backgroundColor: Color(0xff3d5164),
-              child: Text('Te',
-                  style: TextStyle(fontSize: 14, color: Colors.white)),
+              backgroundColor: const Color(0xff3d5164),
+              child: Text(chatService.userFrom.fullName.substring(0, 2),
+                  style: const TextStyle(fontSize: 14, color: Colors.white)),
             ),
-            SizedBox(
+            const SizedBox(
               height: 3,
             ),
-            Text('Nancy maria ',
-                style: TextStyle(
+            Text(chatService.userFrom.fullName,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
                 ))
@@ -119,11 +167,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   _hanldeSubmit(String text) {
     if (text.isEmpty) return;
-    isWriting = false;
 
     final newMessage = BubbleChat(
       text: text,
-      uid: '123',
+      uid: authService.user.id,
       animationController: AnimationController(
           vsync: this, duration: const Duration(milliseconds: 200)),
     );
@@ -132,17 +179,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     newMessage.animationController.forward();
     textController.clear();
     focusNode.requestFocus();
+    isWriting = false;
 
     setState(() {});
+
+    socketService.socket.emit('private-message', {
+      'of': authService.user.id,
+      'from': chatService.userFrom.id,
+      'message': text
+    });
   }
 
   @override
   void dispose() {
     // socket off
     // clear all instances with propuse of preformance improve
+    super.dispose();
     for (BubbleChat message in _messsages) {
       message.animationController.dispose();
     }
-    super.dispose();
+
+    socketService.socket.off('private-message');
   }
 }
