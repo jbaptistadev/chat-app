@@ -1,6 +1,6 @@
 # Chat App
 
-Esta es una aplicación de chat desarrollada con Flutter, un framework para construir aplicaciones nativas multiplataforma. La aplicación está diseñada para funcionar en múltiples plataformas, incluyendo Android, iOS, Linux y Windows.
+Esta es una aplicación de chat desarrollada con Flutter con fines educativos.
 
 ## Características
 
