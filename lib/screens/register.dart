@@ -16,10 +16,10 @@ class RegisterScreen extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         child: SizedBox(
           height: MediaQuery.of(context).size.height * 0.9,
-          child: Center(
+          child: const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
+              children: [
                 Logo(title: 'Register'),
                 _Form(),
                 Labels(

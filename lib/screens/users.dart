@@ -84,9 +84,9 @@ class _EmptyList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xffefffff),
-      child: Column(
+      child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           Icon(
             Icons.message,
             size: 160,
